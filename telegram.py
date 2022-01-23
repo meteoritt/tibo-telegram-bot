@@ -428,12 +428,12 @@ def getMessage():
 @app.route('/')
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://itmem-bot.herokuapp.com/' + TIBO_TELEGRAM_BOT_TOKEN)
+    bot.set_webhook(url='https://tibo-telegram-bot.herokuapp.com/' + TIBO_TELEGRAM_BOT_TOKEN)
     return "?", 200
 
 
 if __name__ == "__main__":
-    if 'HEROKU' in os.environ:
+    if 'TIBO_TELEGRAM_BOT_TOKEN' in os.environ:
         # logger = telebot.logger
         # telebot.logger.setLevel(logging.INFO)
         app.run(host="0.0.0.0", port=os.environ.get('PORT', 8443))
