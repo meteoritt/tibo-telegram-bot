@@ -176,7 +176,7 @@ def listToString(s):
 
 
 @bot.message_handler(commands=['bar'])
-def command_weather(message: Message):
+def command_bar(message: Message):
     cid = message.chat.id
     chat = bot.get_chat(message.chat.id)
     mention = []
@@ -203,7 +203,7 @@ def command_weather(message: Message):
 
 
 @bot.message_handler(commands=['mem'])
-def command_weather(message: Message):
+def command_mem(message: Message):
     cid = message.chat.id
     r = requests.get("https://api.imgflip.com/get_memes")
     print(r.content)
@@ -220,7 +220,7 @@ def command_weather(message: Message):
 
 
 @bot.message_handler(commands=['help_auth'])
-def help_command(message):
+def command_help(message):
     keyboard = telebot.types.InlineKeyboardMarkup()
     keyboard.add(
         telebot.types.InlineKeyboardButton(
@@ -234,11 +234,48 @@ def help_command(message):
     )
 
 
-@bot.message_handler(content_types=['sticker'])
-def sticker_handler(message: Message):
-    bot.send_sticker(message.chat.id, STICKERID)
-    # print(message)
-    # print(message.sticker)
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+sia = SentimentIntensityAnalyzer()
+
+
+def is_positive(message: str) -> str:
+    """True if message has positive compound sentiment, False otherwise."""
+    if sia.polarity_scores(message)["compound"] > 0.75:
+        return f"😁 {sia.polarity_scores(message)}"
+    elif sia.polarity_scores(message)["compound"] > 0.5:
+        return f"😀 {sia.polarity_scores(message)}"
+    elif sia.polarity_scores(message)["compound"] > 0.25:
+        return f"😊 {sia.polarity_scores(message)}"
+    elif sia.polarity_scores(message)["compound"] > 0:
+        return f"🤨 {sia.polarity_scores(message)}"
+    elif sia.polarity_scores(message)["compound"] > -0.25:
+        return f"😥 {sia.polarity_scores(message)}"
+    elif sia.polarity_scores(message)["compound"] > -0.5:
+        return f"😈 {sia.polarity_scores(message)}"
+    elif sia.polarity_scores(message)["compound"] > -0.75:
+        return f"👹 {sia.polarity_scores(message)}"
+    elif sia.polarity_scores(message)["compound"] > -1:
+        return f"🤬 {sia.polarity_scores(message)}"
+    else:
+        return "🙄"
+
+
+@bot.message_handler(commands=['emotion'])
+def sentiment_handler(message: Message):
+    msg = bot.reply_to(message, """\
+    Send your text
+    """)
+    bot.register_next_step_handler(msg, sentiment_reply)
+    # bot.send_message(
+    #     message.chat.id,
+    #     }'
+    # )
+
+
+def sentiment_reply(message):
+    bot.reply_to(message, f'{is_positive(message.text)}')
 
 
 app = Flask(__name__)
@@ -247,7 +284,6 @@ app = Flask(__name__)
 @app.route('/' + TIBO_TELEGRAM_BOT_TOKEN, methods=['POST'])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    bot.send_message(41365750, 'Bot started in Heroku cloud after get messages')
     return "!", 200
 
 
@@ -258,12 +294,16 @@ def webhook():
     return "?", 200
 
 
+@app.before_first_request
+def before_first_request_func():
+    bot.send_message(41365750, 'Bot started in Heroku cloud')
+
+
 if __name__ == "__main__":
     if 'IDE' not in os.environ:
         # logger = telebot.logger
         # telebot.logger.setLevel(logging.INFO)
         app.run(host="0.0.0.0", port=os.environ.get('PORT', 8443))
-        bot.send_message(41365750, 'Bot started in Heroku cloud')
     else:
         bot.send_message(41365750, 'Bot started from IDE')
         bot.remove_webhook()

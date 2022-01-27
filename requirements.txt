@@ -1,4 +1,6 @@
 gunicorn
 flask
+flask_script
 pyTelegramBotAPI
 requests
+nltk
